@@ -17,7 +17,6 @@ interface BookItemProps {
   coverFit: LibraryCoverFitType;
   isSelectMode: boolean;
   bookSelected: boolean;
-  handleBookDownload: (book: Book, options?: { redownload?: boolean; queued?: boolean }) => void;
   showBookDetailsModal: (book: Book) => void;
 }
 
@@ -27,7 +26,6 @@ const BookItem: React.FC<BookItemProps> = ({
   coverFit,
   isSelectMode,
   bookSelected,
-  handleBookDownload,
   showBookDetailsModal,
 }) => {
   const _ = useTranslation();

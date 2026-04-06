@@ -400,7 +400,6 @@ const BookshelfItem: React.FC<BookshelfItemProps> = ({
               coverFit={coverFit}
               isSelectMode={isSelectMode}
               bookSelected={itemSelected}
-              handleBookDownload={handleBookDownload}
               showBookDetailsModal={showBookDetailsModal}
             />
           ) : (

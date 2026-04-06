@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import { ErrorCodes, getTranslator, getTranslators, TranslatorName } from '@/services/translators';
 import { getFromCache, storeInCache, UseTranslatorOptions } from '@/services/translators';
 import { polish, preprocess } from '@/services/translators';
@@ -15,7 +14,6 @@ export function useTranslator({
   enablePreprocessing = true,
 }: UseTranslatorOptions = {}) {
   const _ = useTranslation();
-  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(provider);
   const [translator, setTransltor] = useState(() => getTranslator(provider));
@@ -27,7 +25,7 @@ export function useTranslator({
 
   useEffect(() => {
     const availableTranslators = getTranslators().filter(
-      (t) => (t.authRequired ? !!token : true) && !t.quotaExceeded,
+      (t) => !t.authRequired && !t.quotaExceeded,
     );
     const selectedTranslator =
       availableTranslators.find((t) => t.name === provider) || availableTranslators[0]!;
@@ -90,11 +88,12 @@ export function useTranslator({
         if (!translator) {
           throw new Error(`No translator found for provider: ${selectedProvider}`);
         }
+        // Auth token removed - local only mode
         const translatedTexts = await translator.translate(
           textsNeedingTranslation,
           sourceLanguage,
           targetLanguage,
-          token,
+          null,
           useCache,
         );
 
@@ -142,7 +141,7 @@ export function useTranslator({
           eventDispatcher.dispatch('toast', {
             timeout: 5000,
             message: _(
-              'Daily translation quota reached. Upgrade your plan to continue using AI translations.',
+              'Daily translation quota reached. Please try again later.',
             ),
             type: 'error',
           });
@@ -153,7 +152,7 @@ export function useTranslator({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedProvider, sourceLang, targetLang, translator, token],
+    [selectedProvider, sourceLang, targetLang, translator],
   );
 
   return {

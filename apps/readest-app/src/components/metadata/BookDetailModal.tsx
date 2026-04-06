@@ -22,10 +22,7 @@ interface BookDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   handleBookDownload?: (book: Book, options?: { redownload?: boolean; queued?: boolean }) => void;
-  handleBookUpload?: (book: Book) => void;
   handleBookDelete?: (book: Book) => void;
-  handleBookDeleteCloudBackup?: (book: Book) => void;
-  handleBookDeleteLocalCopy?: (book: Book) => void;
   handleBookMetadataUpdate?: (book: Book, updatedMetadata: BookMetadata) => void;
 }
 
@@ -40,10 +37,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   isOpen,
   onClose,
   handleBookDownload,
-  handleBookUpload,
   handleBookDelete,
-  handleBookDeleteCloudBackup,
-  handleBookDeleteLocalCopy,
   handleBookMetadataUpdate,
 }) => {
   const _ = useTranslation();
@@ -82,13 +76,13 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
     },
     cloud: {
       title: _('Confirm Deletion'),
-      message: _('Are you sure to delete the cloud backup of the selected book?'),
-      handler: handleBookDeleteCloudBackup,
+      message: _('Cloud backup deletion is not available in local-only mode.'),
+      handler: undefined,
     },
     local: {
       title: _('Confirm Deletion'),
       message: _('Are you sure to delete the local copy of the selected book?'),
-      handler: handleBookDeleteLocalCopy,
+      handler: handleBookDelete,
     },
   };
 
@@ -154,20 +148,11 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
   };
 
   const handleDelete = () => handleDeleteAction('both');
-  const handleDeleteCloudBackup = () => handleDeleteAction('cloud');
-  const handleDeleteLocalCopy = () => handleDeleteAction('local');
 
   const handleRedownload = async () => {
     handleClose();
     if (handleBookDownload) {
-      handleBookDownload(book, { redownload: true, queued: false });
-    }
-  };
-
-  const handleReupload = async () => {
-    handleClose();
-    if (handleBookUpload) {
-      handleBookUpload(book);
+      handleBookDownload(book, { redownload: true });
     }
   };
 
@@ -225,12 +210,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({
                 fileSize={fileSize}
                 onEdit={handleBookMetadataUpdate ? handleEditMetadata : undefined}
                 onDelete={handleBookDelete ? handleDelete : undefined}
-                onDeleteCloudBackup={
-                  handleBookDeleteCloudBackup ? handleDeleteCloudBackup : undefined
-                }
-                onDeleteLocalCopy={handleBookDeleteLocalCopy ? handleDeleteLocalCopy : undefined}
                 onDownload={handleBookDownload ? handleRedownload : undefined}
-                onUpload={handleBookUpload ? handleReupload : undefined}
                 onExport={handleBookExport}
               />
             )}

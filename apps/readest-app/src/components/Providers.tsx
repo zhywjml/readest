@@ -4,10 +4,7 @@ import '@/utils/polyfill';
 import i18n from '@/i18n/i18n';
 import { useEffect } from 'react';
 import { IconContext } from 'react-icons';
-import { AuthProvider } from '@/context/AuthContext';
 import { useEnv } from '@/context/EnvContext';
-import { CSPostHogProvider } from '@/context/PHContext';
-import { SyncProvider } from '@/context/SyncContext';
 import { initSystemThemeListener, loadDataTheme } from '@/store/themeStore';
 import { useSettingsStore } from '@/store/settingsStore';
 import { useSafeAreaInsets } from '@/hooks/useSafeAreaInsets';
@@ -67,21 +64,15 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   if (!appService) return;
 
   return (
-    <CSPostHogProvider>
-      <AuthProvider>
-        <IconContext.Provider value={{ size: `${iconSize}px` }}>
-          <SyncProvider>
-            <DropdownProvider>
-              <CommandPaletteProvider>
-                {children}
-                <CommandPalette />
-                <AtmosphereOverlay />
-              </CommandPaletteProvider>
-            </DropdownProvider>
-          </SyncProvider>
-        </IconContext.Provider>
-      </AuthProvider>
-    </CSPostHogProvider>
+    <IconContext.Provider value={{ size: `${iconSize}px` }}>
+      <DropdownProvider>
+        <CommandPaletteProvider>
+          {children}
+          <CommandPalette />
+          <AtmosphereOverlay />
+        </CommandPaletteProvider>
+      </DropdownProvider>
+    </IconContext.Provider>
   );
 };
 

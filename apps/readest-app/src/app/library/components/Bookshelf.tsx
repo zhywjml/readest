@@ -51,13 +51,11 @@ interface BookshelfProps {
     book: Book,
     options?: { redownload?: boolean; queued?: boolean },
   ) => Promise<boolean>;
-  handleBookUpload: (book: Book, syncBooks?: boolean) => Promise<boolean>;
   handleBookDelete: (book: Book, syncBooks?: boolean) => Promise<boolean>;
   handleSetSelectMode: (selectMode: boolean) => void;
   handleShowDetailsBook: (book: Book) => void;
   handleLibraryNavigation: (targetGroup: string) => void;
   handlePushLibrary: () => Promise<void>;
-  booksTransferProgress: { [key: string]: number | null };
 }
 
 const Bookshelf: React.FC<BookshelfProps> = ({
@@ -66,14 +64,12 @@ const Bookshelf: React.FC<BookshelfProps> = ({
   isSelectAll,
   isSelectNone,
   handleImportBooks,
-  handleBookUpload,
   handleBookDownload,
   handleBookDelete,
   handleSetSelectMode,
   handleShowDetailsBook,
   handleLibraryNavigation,
   handlePushLibrary,
-  booksTransferProgress,
 }) => {
   const _ = useTranslation();
   const router = useRouter();
@@ -430,16 +426,12 @@ const Bookshelf: React.FC<BookshelfProps> = ({
             setLoading={setLoading}
             toggleSelection={toggleSelection}
             handleGroupBooks={groupSelectedBooks}
-            handleBookUpload={handleBookUpload}
             handleBookDownload={handleBookDownload}
             handleBookDelete={handleBookDelete}
             handleSetSelectMode={handleSetSelectMode}
             handleShowDetailsBook={handleShowDetailsBook}
             handleLibraryNavigation={handleLibraryNavigation}
             handleUpdateReadingStatus={handleUpdateReadingStatus}
-            transferProgress={
-              'hash' in item ? booksTransferProgress[(item as Book).hash] || null : null
-            }
           />
         ))}
         {viewMode === 'grid' && currentBookshelfItems.length > 0 && (

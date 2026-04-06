@@ -59,7 +59,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onPullLibrary, setIsDropdow
 
   const [isRefreshingMetadata, setIsRefreshingMetadata] = useState(false);
   const [refreshMetadataProgress, setRefreshMetadataProgress] = useState('');
-  const { isSyncing, setLibrary } = useLibraryStore();
+  const { setLibrary } = useLibraryStore();
 
   const showAboutReadest = () => {
     setAboutDialogVisible(true);

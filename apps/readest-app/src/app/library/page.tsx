@@ -82,8 +82,6 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const { envConfig, appService } = useEnv();
   const {
     library: libraryBooks,
-    isSyncing,
-    syncProgress,
     updateBook,
     updateBooks,
     setLibrary,
@@ -733,18 +731,8 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           onSelectAll={handleSelectAll}
           onDeselectAll={handleDeselectAll}
         />
-        <progress
-          aria-label={_('Library Sync Progress')}
-          aria-hidden={isSyncing ? 'false' : 'true'}
-          className={clsx(
-            'progress progress-success absolute bottom-0 left-0 right-0 h-1 translate-y-[2px] transition-opacity duration-200 sm:translate-y-[4px]',
-            isSyncing ? 'opacity-100' : 'opacity-0',
-          )}
-          value={syncProgress * 100}
-          max='100'
-        />
       </div>
-      {(loading || isSyncing) && (
+      {loading && (
         <div className='fixed inset-0 z-50 flex items-center justify-center'>
           <Spinner loading />
         </div>

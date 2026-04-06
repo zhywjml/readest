@@ -11,8 +11,8 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     outputs:
-      release_id: ${{ steps.get-release.outputs.release_id }}
-      release_tag: ${{ steps.get-release.outputs.release_tag }}
+      release_id: ${{ steps.get-release.outputs.release_id || steps.create-release.outputs.release_id }}
+      release_tag: ${{ steps.get-release.outputs.release_tag || steps.create-release.outputs.release_tag }}
       release_note: ${{ steps.get-release-notes.outputs.release_note }}
       release_version: ${{ steps.get-release-notes.outputs.release_version }}
 
@@ -34,15 +34,66 @@ jobs:
               })
               core.setOutput('release_id', data.id);
               core.setOutput('release_tag', data.tag_name);
+              console.log('Found existing release:', data.tag_name);
             } catch (error) {
               if (error.status === 404) {
-                console.log('No releases found. Skipping release update.');
+                console.log('No releases found. Will create a new release.');
                 core.setOutput('release_id', '');
                 core.setOutput('release_tag', '');
               } else {
                 throw error;
               }
             }
+      - name: create release if not exists
+        id: create-release
+        if: steps.get-release.outputs.release_id == ''
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const version = require('./apps/readest-app/package.json').version;
+            const tagName = `v${version}`;
+
+            // Check if tag exists, create if not
+            try {
+              await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tagName}`,
+              });
+              console.log(`Tag ${tagName} already exists`);
+            } catch (e) {
+              if (e.status === 404) {
+                // Create tag from current commit
+                const { data: commit } = await github.rest.git.getCommit({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  commit_sha: context.sha,
+                });
+
+                await github.rest.git.createRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `refs/tags/${tagName}`,
+                  sha: context.sha,
+                });
+                console.log(`Created tag ${tagName}`);
+              }
+            }
+
+            // Create release
+            const { data: release } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tagName,
+              name: `Readest ${version}`,
+              body: `Release ${version}`,
+              draft: false,
+              prerelease: false,
+            });
+
+            core.setOutput('release_id', release.id);
+            core.setOutput('release_tag', release.tag_name);
+            console.log('Created new release:', release.tag_name, 'with ID:', release.id);
       - name: get release notes
         id: get-release-notes
         uses: actions/github-script@v8

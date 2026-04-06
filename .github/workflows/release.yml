@@ -27,12 +27,22 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const { data } = await github.rest.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            })
-            core.setOutput('release_id', data.id);
-            core.setOutput('release_tag', data.tag_name);
+            try {
+              const { data } = await github.rest.repos.getLatestRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              })
+              core.setOutput('release_id', data.id);
+              core.setOutput('release_tag', data.tag_name);
+            } catch (error) {
+              if (error.status === 404) {
+                console.log('No releases found. Skipping release update.');
+                core.setOutput('release_id', '');
+                core.setOutput('release_tag', '');
+              } else {
+                throw error;
+              }
+            }
       - name: get release notes
         id: get-release-notes
         uses: actions/github-script@v8
@@ -53,6 +63,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     needs: get-release
+    if: needs.get-release.outputs.release_id != ''
 
     steps:
       - name: update release
@@ -83,6 +94,7 @@ jobs:
 
   build-koreader-plugin:
     needs: get-release
+    if: needs.get-release.outputs.release_tag != ''
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -107,6 +119,7 @@ jobs:
 
   build-tauri:
     needs: get-release
+    if: needs.get-release.outputs.release_id != ''
     permissions:
       contents: write
     strategy:
@@ -260,11 +273,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd apps/readest-app/
-          curl -sL https://github.com/readest/readest/releases/latest/download/latest.json -o latest.json
+          curl -sL https://github.com/${{ github.repository }}/releases/latest/download/latest.json -o latest.json || echo '{}' > latest.json
 
           version=${{ needs.get-release.outputs.release_version }}
-          universial_apk_url="https://github.com/readest/readest/releases/download/${{ needs.get-release.outputs.release_tag }}/Readest_${version}_universal.apk"
-          arm64_apk_url="https://github.com/readest/readest/releases/download/${{ needs.get-release.outputs.release_tag }}/Readest_${version}_arm64.apk"
+          universial_apk_url="https://github.com/${{ github.repository }}/releases/download/${{ needs.get-release.outputs.release_tag }}/Readest_${version}_universal.apk"
+          arm64_apk_url="https://github.com/${{ github.repository }}/releases/download/${{ needs.get-release.outputs.release_tag }}/Readest_${version}_arm64.apk"
 
           universial_sig=$(cat Readest_${version}_universal.apk.sig)
           arm64_sig=$(cat Readest_${version}_arm64.apk.sig)
@@ -362,7 +375,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          curl -sL https://github.com/readest/readest/releases/latest/download/latest.json -o latest.json
+          curl -sL https://github.com/${{ github.repository }}/releases/latest/download/latest.json -o latest.json || echo '{}' > latest.json
 
           version=${{ needs.get-release.outputs.release_version }}
           arch=${{ matrix.config.arch }}
@@ -378,7 +391,7 @@ jobs:
             exit 1
           fi
 
-          portable_url="https://github.com/readest/readest/releases/download/${{ needs.get-release.outputs.release_tag }}/$bin_file"
+          portable_url="https://github.com/${{ github.repository }}/releases/download/${{ needs.get-release.outputs.release_tag }}/$bin_file"
           portable_sig=$(cat $bin_file.sig)
 
           jq --arg url "$portable_url" \
@@ -391,6 +404,7 @@ jobs:
 
   upload-to-r2:
     needs: [get-release, build-tauri]
+    if: needs.get-release.outputs.release_tag != ''
     uses: ./.github/workflows/upload-to-r2.yml
     with:
       tag: ${{ needs.get-release.outputs.release_tag }}

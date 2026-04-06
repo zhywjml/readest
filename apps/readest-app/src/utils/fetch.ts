@@ -1,4 +1,4 @@
-import { getAccessToken } from './access';
+// Fetch utilities without authentication
 
 export const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout = 10000) => {
   const controller = new AbortController();
@@ -11,16 +11,8 @@ export const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout
 };
 
 export const fetchWithAuth = async (url: string, options: RequestInit) => {
-  const token = await getAccessToken();
-  if (!token) {
-    throw new Error('Not authenticated');
-  }
-  const headers = {
-    ...options.headers,
-    Authorization: `Bearer ${token}`,
-  };
-
-  const response = await fetch(url, { ...options, headers });
+  // Local-only mode: auth removed, fetch without token
+  const response = await fetch(url, { ...options });
 
   if (!response.ok) {
     const errorData = await response.json();
